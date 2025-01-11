@@ -1,0 +1,43 @@
+<div class="file-upload">
+  <div class="file-upload__container">
+    <div *ngIf="selectedFile; else noFile" class="file-upload__selected">
+      <label class="file-upload__label">
+        <input
+          type="file"
+          accept=".csv"
+          (change)="importCSV($event)"
+          class="file-upload__input"
+        />
+        Choose Another File
+      </label>
+      <span class="file-upload__file-name"
+        >Selected file: {{ selectedFile.name }}</span
+      >
+      <p class="file-upload__help-text">Supported file format: .csv</p>
+    </div>
+
+    <ng-template #noFile>
+      <div class="file-upload__no-file">
+        <label class="file-upload__label">
+          <input
+            type="file"
+            accept=".csv"
+            (change)="importCSV($event)"
+            class="file-upload__input"
+          />
+          Choose File
+        </label>
+        <p class="file-upload__help-text">Supported file format: .csv</p>
+      </div>
+    </ng-template>
+  </div>
+
+  <div class="file-upload__errors" *ngIf="selectedFile">
+    <h3 class="file-upload__errors-title">Errors in Uploaded File</h3>
+    <!-- <ul class="file-upload__errors-list">
+      <li *ngFor="let error of errors" class="file-upload__error-item">
+        {{ error }}
+      </li>
+    </ul> -->
+  </div>
+</div>
