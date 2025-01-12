@@ -1,5 +1,10 @@
 import { Component } from '@angular/core';
-import { ROLE } from 'src/app/constants/app-constant';
+import {
+  APP_CONSTANT,
+  Error,
+  ROLE,
+  ROLE_MAPPING,
+} from 'src/app/constants/app-constant';
 import { AppUtilService } from 'src/app/services/app-util.service';
 
 @Component({
@@ -9,27 +14,21 @@ import { AppUtilService } from 'src/app/services/app-util.service';
 })
 export class FileUploadComponent {
   selectedFile: File | null = null;
-  headers: string[] = [];
   parsedData: string[] = [];
-
-  /** Error Cases */
-  // Only Admin will report to Root
-  adminHierarchyError: any[] = [];
-  // Managers can only report to other managers or admin
-  managerHierarchyError: any[] = [];
-  // Caller can only report to manager
-  callerHierarchyError: any[] = [];
-  // All users will report to 1 parent user at a time
-  userParentError: any[] = [];
+  errors: Error[] = [];
+  APP_CONSTANT = APP_CONSTANT;
 
   constructor(private utilService: AppUtilService) {}
 
   /**
-   * Method to import csv file
+   * Method to import a csv file
    * @param event
    * @returns
    */
   importCSV(event: Event) {
+    this.selectedFile = null;
+    this.parsedData = [];
+    this.errors = [];
     const input = event.target as HTMLInputElement;
 
     if (this.utilService.isEmpty(input.files)) {
@@ -41,7 +40,7 @@ export class FileUploadComponent {
   }
 
   /**
-   * Method to read CSV file
+   * Method to read a CSV file
    * @param file
    */
   readCSVFile(file: File): void {
@@ -62,89 +61,104 @@ export class FileUploadComponent {
   }
 
   /**
-   * Methos to parse CSV file content
+   * Method to parse a CSV file content
    * @param content
    */
   parseCSV(content: string): void {
     const lines = content.split('\n').map((line) => line.trim());
 
     // Assuming the first line is the header
-    this.headers = lines[0].split(',');
-
     // Remaining lines are data
     this.parsedData = lines.slice(1);
 
-    this.findErrosInCSV(this.parsedData);
+    this.validateHierarchy(this.parsedData);
   }
 
   /**
-   * Method to parse data from CSV
+   * Method to validate Hierarchy
    * @param parsedData
    */
-  findErrosInCSV(parsedData: string[]) {
-    let mappingObj: Map<string, any> = new Map();
+  validateHierarchy(parsedData: string[]) {
+    const mappingObj = new Map<string, { fullName: string; role: string }>();
+    const roleValidationRules = {
+      ROOT: (reportsTo: string) => this.utilService.isEmpty(reportsTo),
+      ADMIN: (reportsTo: string, parentRole: string) =>
+        parentRole === ROLE.ROOT,
+      MANAGER: (reportsTo: string, parentRole: string) =>
+        parentRole === ROLE.ADMIN || parentRole === ROLE.MANAGER,
+      CALLER: (reportsTo: string, parentRole: string) =>
+        parentRole === ROLE.MANAGER,
+    };
 
+    // Populate mappingObj for quick lookup
     parsedData.forEach((line) => {
-      const columnData = line.split(',');
-      const obj = {
-        fullName: columnData[1],
-        role: columnData[2],
-      };
-
-      mappingObj.set(columnData[0], obj);
+      const [email, fullName, role] = line.split(',');
+      mappingObj.set(email, { fullName, role });
     });
 
+    // Iterate and validate
     parsedData.forEach((line, index) => {
-      const columnData = line.split(',');
+      const [email, fullName, role, reportsTo] = line.split(',');
+      const row = index + 1;
 
-      if (columnData[3].split(';').length > 1) {
-        this.userParentError.push({
-          row: index + 1,
-          email: columnData[0],
-          name: columnData[1],
-          role: columnData[2],
-          reportsTo: columnData[3],
+      // Validate ROOT role
+      if (role === ROLE.ROOT && !roleValidationRules.ROOT(reportsTo)) {
+        this.addError(row, email, fullName, role, reportsTo);
+        return;
+      }
+
+      const parents = reportsTo.split(';');
+      if (parents.length > 1) {
+        // Handle multiple parents
+        this.addError(
+          row,
+          email,
+          fullName,
+          role,
+          reportsTo,
+          APP_CONSTANT.MULTIPLE_PARENT
+        );
+
+        parents.forEach((parent) => {
+          const parentRole = mappingObj.get(parent)?.role;
+          if (!roleValidationRules[ROLE_MAPPING[role]](parent, parentRole)) {
+            this.addError(
+              row,
+              email,
+              fullName,
+              role,
+              mappingObj.get(parent),
+              APP_CONSTANT.ADDITIONAL_ERROR
+            );
+          }
         });
-      } else if (
-        columnData[2] === ROLE.ADMIN &&
-        mappingObj.get(columnData[3])?.role !== ROLE.ROOT
-      ) {
-        this.adminHierarchyError.push({
-          row: index + 1,
-          email: columnData[0],
-          name: columnData[1],
-          role: columnData[2],
-          reportsTo: mappingObj.get(columnData[3]),
-        });
-      } else if (
-        columnData[2] === ROLE.MANAGER &&
-        mappingObj.get(columnData[3])?.role !== ROLE.ADMIN &&
-        mappingObj.get(columnData[3])?.role !== ROLE.MANAGER
-      ) {
-        this.managerHierarchyError.push({
-          row: index + 1,
-          email: columnData[0],
-          name: columnData[1],
-          role: columnData[2],
-          reportsTo: mappingObj.get(columnData[3]),
-        });
-      } else if (
-        columnData[2] === ROLE.CALLER &&
-        mappingObj.get(columnData[3])?.role !== ROLE.MANAGER
-      ) {
-        this.callerHierarchyError.push({
-          row: index + 1,
-          email: columnData[0],
-          name: columnData[1],
-          role: columnData[2],
-          reportsTo: mappingObj.get(columnData[3]),
-        });
+      } else {
+        // Single parent validation
+        const parentRole = mappingObj.get(reportsTo)?.role;
+        if (!roleValidationRules[ROLE_MAPPING[role]](reportsTo, parentRole)) {
+          this.addError(row, email, fullName, role, mappingObj.get(reportsTo));
+        }
       }
     });
+  }
 
-    console.log(this.userParentError);
-    console.log(this.adminHierarchyError);
-    console.log(this.managerHierarchyError);
-    console.log(this.callerHierarchyError);
+  /**
+   * Method to collect errors
+   * @param row
+   * @param email
+   * @param name
+   * @param role
+   * @param reportsTo
+   * @param type
+   */
+  addError(
+    row: number,
+    email: string,
+    name: string,
+    role: string,
+    reportsTo: any,
+    type = APP_CONSTANT.GENERAL_ERROR
+  ) {
+    this.errors.push({ row, email, name, role, reportsTo, type });
   }
 }

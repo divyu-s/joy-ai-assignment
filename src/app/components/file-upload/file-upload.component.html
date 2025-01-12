@@ -11,7 +11,7 @@
         Choose Another File
       </label>
       <span class="file-upload__file-name"
-        >Selected file: {{ selectedFile.name }}</span
+        >Selected file: {{ selectedFile?.name }}</span
       >
       <p class="file-upload__help-text">Supported file format: .csv</p>
     </div>
@@ -32,12 +32,5 @@
     </ng-template>
   </div>
 
-  <div class="file-upload__errors" *ngIf="selectedFile">
-    <h3 class="file-upload__errors-title">Errors in Uploaded File</h3>
-    <!-- <ul class="file-upload__errors-list">
-      <li *ngFor="let error of errors" class="file-upload__error-item">
-        {{ error }}
-      </li>
-    </ul> -->
-  </div>
+  <app-error [errors]="errors" *ngIf="selectedFile"></app-error>
 </div>

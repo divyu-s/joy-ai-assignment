@@ -1,0 +1,79 @@
+<div class="file-upload__errors">
+  <h3 class="file-upload__errors-title">Errors in Uploaded File</h3>
+  <ul class="file-upload__errors-list">
+    <li *ngFor="let error of errors" class="file-upload__error-item">
+      <ng-container [ngSwitch]="error.type">
+        <!-- Case: Multiple Parent Error -->
+        <div *ngSwitchCase="APP_CONSTANT.MULTIPLE_PARENT" class="error-item">
+          <span class="font-bold">
+            Row {{ error?.row }} (<span class="error-item__email red">{{
+              error?.email
+            }}</span
+            >) </span
+          >: {{ error?.name }} is a
+          <span class="font-bold">{{ error?.role }}</span> who reports to
+          <span class="font-bold red">{{
+            error?.reportsTo?.split(";")?.length
+          }}</span>
+          emails: <span class="red word-break">{{ error?.reportsTo }}</span
+          >.
+        </div>
+
+        <!-- Case: Additional Error -->
+        <div *ngSwitchCase="APP_CONSTANT.ADDITIONAL_ERROR" class="error-item">
+          <span class="font-bold">
+            Row {{ error?.row }} (<span class="error-item__email red">{{
+              error?.email
+            }}</span
+            >)
+          </span>
+          has an additional problem of
+          <span class="font-bold">multiple parents</span>, but if we consider
+          each parent individually, at least one is an
+          <span class="font-bold"
+            >{{ error?.reportsTo?.role }} ({{
+              error?.reportsTo?.fullName
+            }})</span
+          >
+          —which also violates the rule (<span class="font-bold"
+            >{{ error?.role }} → {{ error?.reportsTo?.role }} is not
+            allowed</span
+          >).
+        </div>
+
+        <!-- Default Case -->
+        <div *ngSwitchDefault class="error-item">
+          <p *ngIf="error.role === 'Root'; else nonRootError">
+            <span class="font-bold">
+              Row {{ error?.row }} (<span class="error-item__email red">{{
+                error?.email
+              }}</span
+              >) </span
+            >: {{ error?.name }} is a
+            <span class="font-bold">{{ error?.role }}</span> who reports to
+            these emails:
+            <span class="font-bold red word-break">{{ error?.reportsTo }}</span
+            >.
+            <span class="font-bold">Root should not report to anyone.</span>
+          </p>
+
+          <ng-template #nonRootError>
+            <p>
+              <span class="font-bold">
+                Row {{ error?.row }} (<span class="error-item__email red">{{
+                  error?.email
+                }}</span
+                >) </span
+              >: {{ error?.name }} is a
+              <span class="font-bold">{{ error?.role }}</span> but reports to
+              {{ error?.reportsTo?.fullName }} (<span class="font-bold">{{
+                error?.reportsTo?.role
+              }}</span
+              >).
+            </p>
+          </ng-template>
+        </div>
+      </ng-container>
+    </li>
+  </ul>
+</div>

@@ -6,6 +6,11 @@ import { Injectable } from '@angular/core';
 export class AppUtilService {
   constructor() {}
 
+  /**
+   * Method to check if value is empty
+   * @param value
+   * @returns
+   */
   isEmpty(value: any) {
     if (Array.isArray(value)) {
       // Check if it's an array and is empty

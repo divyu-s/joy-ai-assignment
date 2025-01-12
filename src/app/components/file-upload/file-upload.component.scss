@@ -2,7 +2,6 @@
   max-width: 900px;
   margin: 2rem auto;
   padding: 1.5rem;
-  border: 1px solid #ddd;
   border-radius: 8px;
   background-color: #f9f9f9;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -21,9 +20,7 @@
       margin: 0.5rem 0;
       color: #fff;
       background-color: #007bff;
-      border: none;
       border-radius: 4px;
-      font-size: 1rem;
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
@@ -50,30 +47,6 @@
     }
   }
 
-  .file-upload__errors {
-    margin-top: 1.5rem;
-    width: 100%;
-    text-align: left;
-
-    .file-upload__errors-title {
-      margin-bottom: 0.5rem;
-      font-size: 1.2rem;
-      color: #d9534f;
-    }
-
-    .file-upload__errors-list {
-      list-style: disc;
-      margin: 0;
-      padding-left: 1.5rem;
-    }
-
-    .file-upload__error-item {
-      font-size: 0.9rem;
-      color: #d9534f;
-    }
-  }
-
-  /* Responsive Design */
   @media (max-width: 600px) {
     .file-upload {
       padding: 1rem;
