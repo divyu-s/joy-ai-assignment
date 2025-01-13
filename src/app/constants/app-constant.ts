@@ -25,4 +25,6 @@ export const APP_CONSTANT = {
   GENERAL_ERROR: 'generalError',
   ADDITIONAL_ERROR: 'additionalError',
   MULTIPLE_PARENT: 'multipleParent',
+  CYCLE_ERROR: 'cycleError',
+  ADDITIONAL_CYCLE_ERROR: 'additionalCycleError',
 };

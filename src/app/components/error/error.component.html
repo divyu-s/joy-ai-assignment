@@ -41,6 +41,40 @@
           >).
         </div>
 
+        <!-- Case: Cycle Error -->
+        <div *ngSwitchCase="APP_CONSTANT.CYCLE_ERROR" class="error-item">
+          <span class="font-bold">
+            Row {{ error?.row }} (<span class="error-item__email red">{{
+              error?.email
+            }}</span
+            >) </span
+          >: {{ error?.name }} ({{ error?.role }}) reports to
+          {{ error?.reportsTo?.fullName }}, who in turn reports back to
+          {{ error?.name }}, creating a
+          <span class="font-bold">reporting cycle</span>.
+        </div>
+
+        <!-- Case: Add. Cycle Error -->
+        <div
+          *ngSwitchCase="APP_CONSTANT.ADDITIONAL_CYCLE_ERROR"
+          class="error-item"
+        >
+          <span class="font-bold">
+            Row {{ error?.row }} (<span class="error-item__email red">{{
+              error?.email
+            }}</span
+            >)
+          </span>
+          has an additional problem of
+          <span class="font-bold">multiple parents</span>, but if we consider
+          each parent individually, at least one is violates the rule ({{
+            error?.name
+          }}
+          ({{ error?.role }}) reports to {{ error?.reportsTo?.fullName }}, who
+          in turn reports back to {{ error?.name }}, creating a
+          <span class="font-bold">reporting cycle</span>).
+        </div>
+
         <!-- Default Case -->
         <div *ngSwitchDefault class="error-item">
           <p *ngIf="error.role === 'Root'; else nonRootError">

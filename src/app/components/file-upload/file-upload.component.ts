@@ -37,6 +37,7 @@ export class FileUploadComponent {
 
     this.selectedFile = input.files[0];
     this.readCSVFile(this.selectedFile);
+    input.value = '';
   }
 
   /**
@@ -79,7 +80,10 @@ export class FileUploadComponent {
    * @param parsedData
    */
   validateHierarchy(parsedData: string[]) {
-    const mappingObj = new Map<string, { fullName: string; role: string }>();
+    const mappingObj = new Map<
+      string,
+      { fullName: string; role: string; reportsTo: string[] }
+    >();
     const roleValidationRules = {
       ROOT: (reportsTo: string) => this.utilService.isEmpty(reportsTo),
       ADMIN: (reportsTo: string, parentRole: string) =>
@@ -96,8 +100,12 @@ export class FileUploadComponent {
         return;
       }
 
-      const [email, fullName, role] = line.split(',');
-      mappingObj.set(email, { fullName, role });
+      const [email, fullName, role, reportsTo] = line.split(',');
+      mappingObj.set(email, {
+        fullName,
+        role,
+        reportsTo: reportsTo?.split(';'),
+      });
     });
 
     // Iterate and validate
@@ -128,6 +136,19 @@ export class FileUploadComponent {
         );
 
         parents.forEach((parent) => {
+          const parentReportTo = mappingObj.get(parent)?.reportsTo;
+
+          if (parentReportTo?.includes(email)) {
+            this.addError(
+              row,
+              email,
+              fullName,
+              role,
+              mappingObj.get(parent),
+              APP_CONSTANT.ADDITIONAL_CYCLE_ERROR
+            );
+          }
+
           const parentRole = mappingObj.get(parent)?.role;
           if (!roleValidationRules[ROLE_MAPPING[role]](parent, parentRole)) {
             this.addError(
@@ -142,6 +163,19 @@ export class FileUploadComponent {
         });
       } else {
         // Single parent validation
+        const parentReportTo = mappingObj.get(reportsTo)?.reportsTo;
+
+        if (parentReportTo?.includes(email)) {
+          this.addError(
+            row,
+            email,
+            fullName,
+            role,
+            mappingObj.get(reportsTo),
+            APP_CONSTANT.CYCLE_ERROR
+          );
+        }
+
         const parentRole = mappingObj.get(reportsTo)?.role;
         if (!roleValidationRules[ROLE_MAPPING[role]](reportsTo, parentRole)) {
           this.addError(row, email, fullName, role, mappingObj.get(reportsTo));
