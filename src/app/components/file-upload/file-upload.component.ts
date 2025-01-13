@@ -92,12 +92,20 @@ export class FileUploadComponent {
 
     // Populate mappingObj for quick lookup
     parsedData.forEach((line) => {
+      if (this.utilService.isEmpty(line)) {
+        return;
+      }
+
       const [email, fullName, role] = line.split(',');
       mappingObj.set(email, { fullName, role });
     });
 
     // Iterate and validate
     parsedData.forEach((line, index) => {
+      if (this.utilService.isEmpty(line)) {
+        return;
+      }
+
       const [email, fullName, role, reportsTo] = line.split(',');
       const row = index + 1;
 
@@ -107,8 +115,8 @@ export class FileUploadComponent {
         return;
       }
 
-      const parents = reportsTo.split(';');
-      if (parents.length > 1) {
+      const parents = reportsTo?.split(';');
+      if (parents?.length > 1) {
         // Handle multiple parents
         this.addError(
           row,

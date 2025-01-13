@@ -1,6 +1,6 @@
 <div class="file-upload__errors">
   <h3 class="file-upload__errors-title">Errors in Uploaded File</h3>
-  <ul class="file-upload__errors-list">
+  <ul class="file-upload__errors-list" *ngIf="errors?.length > 0; else noError">
     <li *ngFor="let error of errors" class="file-upload__error-item">
       <ng-container [ngSwitch]="error.type">
         <!-- Case: Multiple Parent Error -->
@@ -76,4 +76,8 @@
       </ng-container>
     </li>
   </ul>
+
+  <ng-template #noError>
+    <div class="no-error-item">No Errors in file</div>
+  </ng-template>
 </div>
